@@ -169,11 +169,14 @@ export async function stageB(env) {
       if (!(SELLER_CAT.test(cat) || keys.some((k) => nos(t).includes(k)))) continue;
       places.push({ t, cat: cat.split('>').pop(), a: p.roadAddress || p.address, lat: Number(p.mapy) / 1e7, lng: Number(p.mapx) / 1e7 });
     }
-    const brand = toks.filter((t) => !GENERIC.test(t));
+    const brand = toks.length > 1 ? toks.filter((t) => !GENERIC.test(t)) : [];
     const branded = places.filter((pl) => brand.some((b) => nos(pl.t).includes(b)));
     if (branded.length) places.splice(0, places.length, ...branded);
+    const txt = [...it.posts.map((x) => x.t + ' ' + x.s), ...it.news.map((x) => x.t)].join(' ');
+    const onlyHits = (txt.match(/에서만|단독\s?판매|한정\s?판매|1호점|한 곳/g) || []).length;
+    const only = !it.conv && places.length === 1 && onlyHits >= 1;
     const p = prevMap.get(it.name);
-    return { ...it, posts: it.posts.slice(0, 20), id: nos(it.name), imgs, places, first: p?.first || ymd(new Date(st.t + 9 * 36e5)), prevRank: p?.rank || null };
+    return { ...it, posts: it.posts.slice(0, 20), only, id: nos(it.name), imgs, places, first: p?.first || ymd(new Date(st.t + 9 * 36e5)), prevRank: p?.rank || null };
   }));
   const data = { u: st.t, items: out };
   await env.KV.put('or:data', JSON.stringify(data));
