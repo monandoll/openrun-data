@@ -149,6 +149,7 @@ export async function stageA(env) {
 }
 
 const GENERIC = /^(모찌|떡|쿠키|빵|케이크|디저트|찹쌀떡|절편|설기|소금빵|젤라또|아이스크림|크림|초코|초콜릿|라떼)$/;
+const NOT_SELLER = /떡볶이|분식|한식|육류|고기|술집|주점|호프|치킨|피자|중식|일식|양식|국밥|찌개/;
 const SELLER_CAT = /카페|디저트|떡|베이커리|제과|빵|초콜릿|아이스크림|케이크|도넛|와플|편의점|과자|음료/;
 
 export async function stageB(env) {
@@ -167,6 +168,7 @@ export async function stageB(env) {
     for (const p of lj?.items || []) {
       const t = strip(p.title), cat = p.category || '';
       if (!(SELLER_CAT.test(cat) || keys.some((k) => nos(t).includes(k)))) continue;
+      if (NOT_SELLER.test(cat) && !keys.some((k) => nos(t).includes(k))) continue;
       places.push({ t, cat: cat.split('>').pop(), a: p.roadAddress || p.address, lat: Number(p.mapy) / 1e7, lng: Number(p.mapx) / 1e7 });
     }
     const brand = toks.length > 1 ? toks.filter((t) => !GENERIC.test(t)) : [];
@@ -196,6 +198,7 @@ export async function near(env, p) {
     for (const x of j.items || []) {
       const t = strip(x.title), cat = x.category || '';
       if (conv ? !t.includes(conv) : !(SELLER_CAT.test(cat) || nos(t).includes(k))) continue;
+      if (!conv && NOT_SELLER.test(cat) && !nos(t).includes(k)) continue;
       const plat = Number(x.mapy) / 1e7, plng = Number(x.mapx) / 1e7;
       const dist = lat ? Math.round(Math.hypot((plat - lat) * 111000, (plng - lng) * 88000)) : null;
       if (dist != null && dist > 15000) continue;
